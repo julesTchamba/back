@@ -1,6 +1,7 @@
 package backend.database;
 
-
+import java.io.File;
+import java.io.IOException;
 import java.util.logging.*;
 
 public class RSQLog
@@ -14,24 +15,46 @@ public class RSQLog
 	static private Level levelFinest = null; 
 
     private static Logger logger = Logger.getLogger("global");
-    private static FileHandler fh; 
+    private static FileHandler fh;
+    private static String fileName;
 	     
-	public RSQLog() 
-	{ 
-		
-	} 
+	public RSQLog()
+	{
+	}
 
-	static public void init(String filename) 
+	public static void createLogFile(String path) {
+		fileName = path;
+		File file = new File(fileName); //initialize File object and passing path as argument
+		boolean result;
+		try
+		{
+			result = file.createNewFile();  //creates a new file
+			if(result)      // test if successfully created a new file
+			{
+				System.out.println("file created "+file.getCanonicalPath()); //returns the path string
+			}
+			else
+			{
+				System.out.println("File already exist at location: "+file.getCanonicalPath());
+			}
+		}
+		catch (IOException e)
+		{
+			e.printStackTrace();    //prints exception if any
+		}
+	}
+
+	static public void init()
 	{ 
 		try { 
-			fh = new FileHandler(filename);
+			fh = new FileHandler(fileName);
 			XMLFormatter xf = new XMLFormatter();  
 			fh.setFormatter(xf);
     		logger.getLogger("global").addHandler(fh);
     	}
     	catch (Exception e) 
     	{ 
-    		System.err.println("(RSQLog) Cannot open log file"); 
+    		System.err.println(e);
     	} 
 	} 
 	
