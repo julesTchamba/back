@@ -91,7 +91,7 @@ public final class LecteurXml {
                         break;
                      case "photo":
                         photo = parser.getText();
-                        break;
+
                      case "bio":
                         bio = parser.getText();
                         break;
@@ -386,6 +386,7 @@ public final class LecteurXml {
                                 String codePostal, String carte, String noCarte,
                                 int expMois, int expAnnee, String motDePasse,
                                 String forfait) {
+
       // On le client dans la BD
    }
 
@@ -395,6 +396,7 @@ public final class LecteurXml {
          RSQUser user = new RSQUser("EQUIPE104", "SSW5H3lj");
          RSQAddress hostAddress = new RSQAddress("gti660ora12c.logti.etsmtl.ca","1521"," GTI660");
          RSQConnect dbConnect = new RSQConnect();
+
          dbConnect.open(user, hostAddress);
          //creation fichier log
          RSQLog.createLogFile("..\\back\\src\\main\\resources\\logFile.log");
@@ -402,14 +404,10 @@ public final class LecteurXml {
          if(dbConnect.isConnected) {
             RSQLog.message(Level.INFO, "Connection a la BD reussie !");
 
-         } else {
-            RSQLog.message(Level.SEVERE, "Connection a la BD Echoue !");
          }
 
-
       } catch (Exception e) {
-         System.err.println(e.getMessage());
-         e.printStackTrace();
+         RSQLog.message(Level.SEVERE, "Connection a la BD Echoue ! "+ e.getMessage());
       }
    }
 
