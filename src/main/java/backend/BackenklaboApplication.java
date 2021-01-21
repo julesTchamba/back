@@ -15,9 +15,9 @@ public class BackenklaboApplication {
 	private static void lireFichierXml() {
 			//lecture des fichiers et insertion dans la base de donnees
 			LecteurXml lb = new LecteurXml();
-			lb.lecturePersonnes("..\\back\\src\\main\\resources\\fichiersXML\\personnes_utf8.xml");
-			//lb.lectureFilms("..\\back\\src\\main\\resources\\fichiersXML\\films_utf8.xml");
-			//lb.lectureClients("..\\back\\src\\main\\resources\\fichiersXML\\clients_utf8.xml");
+			lb.lecturePersonnes("..\\laboratoire-1_backend\\src\\main\\resources\\fichiersXML\\personnes_utf8.xml");
+			//lb.lectureFilms("..\\laboratoire-1_backend\\src\\main\\resources\\fichiersXML\\films_utf8.xml");
+			//lb.lectureClients("..\\laboratoire-1_backend\\src\\main\\resources\\fichiersXML\\clients_utf8.xml");
 	}
 
 }
