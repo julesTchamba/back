@@ -1,37 +1,33 @@
-package backend.database;
+package backend.model;
 
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.sql.CallableStatement;
+import java.sql.Date;
+import java.sql.PreparedStatement;
+import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.logging.Level;
 
+import backend.model.access.*;
+import backend.model.data.Role;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 import org.xmlpull.v1.XmlPullParserFactory;
 /*
  * Classe qui permet de lire le fichier xml
- * et extrait les informations du fichier
+ * et extrait les informations du fichier et
+ * et fait les insertons.
  */
 public final class LecteurXml {
+   private RSQSession RSQsession ;
 
-   public static class Role {
-      public Role(int i, String n, String p) {
-         id = i;
-         nom = n;
-         personnage = p;
-      }
-      protected int id;
-      protected String nom;
-      protected String personnage;
-   }
-
-   public LecteurXml() {
-      connectionBD();
-   }
-
-
-   public void lecturePersonnes(String nomFichier){
+    public LecteurXml() {
+       connectionBD();
+    }
+   public  void lecturePersonnes(String nomFichier){
       try {
          XmlPullParserFactory factory = XmlPullParserFactory.newInstance();
          XmlPullParser parser = factory.newPullParser();
@@ -367,9 +363,65 @@ public final class LecteurXml {
       }
    }
 
-   private void insertionPersonne(int id, String nom, String anniv, String lieu, String photo, String bio) {
-      // On insere la personne dans la BD
+   private void insertionPersonne(int id, String nomComplet, String anniv, String lieu, String photo, String bio) {
+      try {
+         RSQQuery RSQquery = new RSQQuery();
+         String query = "INSERT INTO PERSONNE VALUES (?,?,?,?,?,?)";
+         query = generateActualSql(query,id,nomComplet,anniv,lieu,photo,bio);
+
+         CallableStatement cstmt = RSQsession.getCallableStatement("{call SP_ADD_PERSONNE(?,?,?,?,?,?)}");
+         cstmt.setInt(1,id);
+         cstmt.setString(2,nomComplet);
+         cstmt.setString(3, anniv);
+         cstmt.setString(4,lieu);
+         cstmt.setString(5,photo);
+         cstmt.setString(6,bio);
+         RSQquery.setString(query);
+         boolean success = RSQsession.submitQuery(cstmt,RSQquery);
+         if (success){
+            RSQLog.message(Level.INFO,"Insertion reussie !");
+         }
+      } catch (Exception e){
+         RSQLog.message(Level.SEVERE,e.getMessage());
+      }
+    }
+
+    // Emprunte de https://stackoverflow.com/questions/2683214/get-query-from-java-sql-preparedstatement
+   private String generateActualSql(String sqlQuery, Object... parameters) {
+      String[] parts = sqlQuery.split("\\?");
+      StringBuilder sb = new StringBuilder();
+
+      // This might be wrong if some '?' are used as litteral '?'
+      for (int i = 0; i < parts.length; i++) {
+         String part = parts[i];
+         sb.append(part);
+         if (i < parameters.length) {
+            sb.append(formatParameter(parameters[i]));
+         }
+      }
+
+      return sb.toString();
    }
+   private String formatParameter(Object parameter) {
+      if (parameter == null) {
+         return "NULL";
+      } else {
+         if (parameter instanceof String) {
+            return "'" + ((String) parameter).replace("'", "''") + "'";
+         } else if (parameter instanceof Timestamp) {
+            return "to_timestamp('" + new SimpleDateFormat("MM/dd/yyyy HH:mm:ss.SSS").
+                    format(parameter) + "', 'mm/dd/yyyy hh24:mi:ss.ff3')";
+         } else if (parameter instanceof Date) {
+            return "to_date('" + new SimpleDateFormat("MM/dd/yyyy HH:mm:ss").
+                    format(parameter) + "', 'mm/dd/yyyy hh24:mi:ss')";
+         } else if (parameter instanceof Boolean) {
+            return ((Boolean) parameter).booleanValue() ? "1" : "0";
+         } else {
+            return parameter.toString();
+         }
+      }
+   } //Fin Emprunt
+
 
    private void insertionFilm(int id, String titre, int annee,
                               ArrayList<String> pays, String langue, int duree, String resume,
@@ -393,21 +445,18 @@ public final class LecteurXml {
    private void connectionBD() {
       // On se connecte a la BD
       try {
-         RSQUser user = new RSQUser("EQUIPE104", "SSW5H3lj");
+         RSQsession = new RSQSession();
          RSQAddress hostAddress = new RSQAddress("gti660ora12c.logti.etsmtl.ca","1521"," GTI660");
-         RSQConnect dbConnect = new RSQConnect();
-
-         dbConnect.open(user, hostAddress);
+         boolean sessionOk = RSQsession.createSession(new RSQUser("EQUIPE105", "GEUrxCtv"),hostAddress);
          //creation fichier log
          RSQLog.createLogFile("..\\back\\src\\main\\resources\\logFile.log");
          RSQLog.init();
-         if(dbConnect.isConnected) {
-            RSQLog.message(Level.INFO, "Connection a la BD reussie !");
-
+         if(sessionOk) {
+            RSQLog.message(Level.INFO, "Session cree avec Succes !");
          }
 
       } catch (Exception e) {
-         RSQLog.message(Level.SEVERE, "Connection a la BD Echoue ! "+ e.getMessage());
+         RSQLog.message(Level.SEVERE,  e.getMessage());
       }
    }
 

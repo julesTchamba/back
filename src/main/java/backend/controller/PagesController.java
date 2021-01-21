@@ -9,19 +9,18 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import backend.reponses.ConnectionResponse;
 
 @RestController
 public class PagesController {
 	
-	
+	/*
 	@RequestMapping("/connectionResponse")
 	public ConnectionResponse getStatusConnecton() {
 		
 		ConnectionResponse connectionResponse = new ConnectionResponse(true);
 		
 		return connectionResponse;
-	}
+	}*/
 	   
 	    @CrossOrigin(origins = "http://localhost:4200")
 	    @PutMapping("/save_appareils")

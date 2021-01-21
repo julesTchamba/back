@@ -1,4 +1,4 @@
-package backend.database;
+package backend.model.access;
 
 /**
 * Class that define a user of the database

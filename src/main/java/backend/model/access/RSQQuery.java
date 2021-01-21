@@ -1,4 +1,4 @@
-package backend.database;
+package backend.model.access;
 
 
 /**
@@ -11,9 +11,8 @@ public class RSQQuery extends Object
 {	
 	String query = new String(); 
 
-	public RSQQuery() 
-	{ 
-		// create room for keys and for table	
+	public RSQQuery()
+	{
 	}
 
 	public void setString(String query) 

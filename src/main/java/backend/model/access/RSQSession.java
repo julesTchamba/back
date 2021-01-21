@@ -1,4 +1,4 @@
-package backend.database;
+package backend.model.access;
 
 import java.sql.*; 
 
@@ -16,7 +16,8 @@ public class RSQSession
 {
 				
 	RSQAuthentification authentification = null; 	
-	RSQConnect dbConnect = null; 
+	RSQConnect dbConnect = null;
+	PreparedStatement pstmt = null;
 	
 	/**
 	* Constructor of a new Session
@@ -49,22 +50,23 @@ public class RSQSession
 			System.err.println("(RSQSession) Authentification failed"); 
 			return false;
 		}
-	} 
+	}
 
-
-	public boolean submitQuery(RSQQuery query) 
-	{ 
+	public boolean submitQuery(CallableStatement cstmt,RSQQuery query)
+	{
 		try 
 		{ 
 			dbConnect.isOpen(); 
-			dbConnect.send(query); 
+			return dbConnect.send(cstmt,query);
 		}
 		catch(Exception e)  
 		{
 			System.err.println("(RSQSession) Error cannot submit query"); 						
 			return false; 
-		}		
-		return true; 
+		}
+
+
+
 	}
 
 	public void destroySession() 
@@ -84,5 +86,8 @@ public class RSQSession
 
 	}
 
+	public CallableStatement getCallableStatement(String sql) {
+		return dbConnect.prepareCall(sql);
+	}
 }
 

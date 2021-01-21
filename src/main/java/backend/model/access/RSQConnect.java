@@ -1,6 +1,7 @@
-package backend.database;
+package backend.model.access;
 
 import java.sql.*;
+import java.util.logging.Level;
 
 
 /**
@@ -11,10 +12,11 @@ import java.sql.*;
 public class RSQConnect
 {
     Connection dbConnect = null;
-    boolean isConnected = false;
+    public boolean isConnected = false;
     ResultSet rs = null;
     ResultSetMetaData rsmd = null;
     String output = new String();
+    PreparedStatement pstmt = null;
 
     RSQQuery currentQuery= new RSQQuery();
     RSQResult result = null;
@@ -75,20 +77,35 @@ public class RSQConnect
         return isConnected;
     }
     
-    public boolean send(RSQQuery query)
+    public boolean send(PreparedStatement cstmt, RSQQuery query)
     {
         if (query.toString().trim().matches("INSERT") || query.toString().trim().matches("UPDATE"))
-            return (sendUpdate(query.toString()));
+            return (sendUpdate(cstmt,query.toString()));
         else
-            return (send(query.toString()));
+            return (send(cstmt,query.toString()));
     }
-    
-    public boolean sendUpdate(String query)
+
+    public PreparedStatement getPreparedStatement(String query) throws SQLException {
+
+        try {
+            pstmt =  (PreparedStatement)dbConnect.prepareStatement(query);
+            return pstmt;
+
+        } catch (Exception e) {
+            System.err.println("(RSQConnect) Cannot create statement: " + e.getMessage());
+            throw (e);
+
+        }
+
+
+    }
+
+    public boolean sendUpdate(PreparedStatement pstmt, String query)
     {
         if (isConnected) {
             try {
-                System.err.println("(RSQConnect) Sending query:\t" + query);
-                PreparedStatement pstmt = (PreparedStatement)dbConnect.prepareStatement(query);
+                System.out.println("(RSQConnect) Sending query:\t" + query);
+
                 int test = pstmt.executeUpdate();
                 if (test >=0)
                     return true;
@@ -107,53 +124,56 @@ public class RSQConnect
             return false;
         }
     }
-    
-    public boolean send(String query)
+
+
+    private boolean send( PreparedStatement cstmt, String query)
     {
-        
         if (isConnected) {
             try {
-                System.err.println("(RSQConnect) Sending query:\t" + query);
-                PreparedStatement pstmt = (PreparedStatement)dbConnect.prepareStatement(query);
-                
-                rs = (ResultSet)pstmt.executeQuery();
-                rsmd = (ResultSetMetaData)rs.getMetaData();
-                result.setResultSet(rs, rsmd);
-                
-                if (result.extractResult()) {
-                    output = "";
-                    for (int i = 0; i < result.getColCount(); i ++) {
-                        output = output + "\t" + result.getTitleAt(i);
-                    }
-                    
-                    System.err.println(output);
-                    System.err.println("=================================================================================");
-                    output = "";
-                    
-                    for(int i =0; i < result.getRowCount(); i++) {
-                        for(int j =0; j < result.getColCount(); j++) {
-                            //System.err.println("Trace " + i + " " + j);
-                            output = output + "\t" + result.getObjectAt(i, j);
-                        }
-                        System.err.println(output);
-                        output = "";
-                    }
-                    
-                    return true;
+                System.out.println("(RSQConnect) Sending query:\t" + query);
+                rs = cstmt.executeQuery();
+                cstmt.close();
+                 if(!query.contains("INSERT INTO")) {
+                     rsmd = rs.getMetaData();
+                     result.setResultSet(rs, rsmd);
+
+                     if (result.extractResult()) {
+                         output = "";
+                         for (int i = 0; i < result.getColCount(); i ++) {
+                             output = output + "\t" + result.getTitleAt(i);
+                         }
+
+                         System.err.println(output);
+                         System.err.println("=================================================================================");
+                         output = "";
+
+                         for(int i =0; i < result.getRowCount(); i++) {
+                             for(int j =0; j < result.getColCount(); j++) {
+                                 //System.err.println("Trace " + i + " " + j);
+                                 output = output + "\t" + result.getObjectAt(i, j);
+                             }
+                             System.err.println(output);
+                             output = "";
+                         }
+                 }
+                     return true;
                 }
+                   return true;
           
             } catch (SQLException e) {
                 if ( e.getMessage().trim().equals("No ResultSet was produced")) {
-                    return true;
+                    RSQLog.message(Level.INFO, "No ResultSet was produced !");
                 } else {
                     System.err.println("(RSQConnect) Cannot send statement to DB because: " + e.getMessage());
-                    return false;
+                    RSQLog.message(Level.SEVERE, "Echec de l'insertion !");
+                    Thread.currentThread().stop();
                 }
+
+                return  false;
             }
         } else {
             return false;
         }
-    return false; 
     }
 
     /**
@@ -173,5 +193,14 @@ public class RSQConnect
     {
         return isConnected;
         
+    }
+
+    public CallableStatement prepareCall(String sql) {
+        try {
+            return dbConnect.prepareCall(sql);
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+            return null;
+        }
     }
 }

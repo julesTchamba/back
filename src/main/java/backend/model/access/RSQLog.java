@@ -1,4 +1,4 @@
-package backend.database;
+package backend.model.access;
 
 import java.io.File;
 import java.io.IOException;

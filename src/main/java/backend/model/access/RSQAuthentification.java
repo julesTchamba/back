@@ -1,4 +1,4 @@
-package backend.database;
+package backend.model.access;
 
 /**
 * Class that connect to the database and process the authentification 
